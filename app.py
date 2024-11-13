@@ -1,7 +1,12 @@
+import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
+
+def create_connection(db_name = 'echo_pop.db'):
+    conn = sqlite3.connect()
+    cursor = conn
 
 def fetch_page(url: str):
     url = url
