@@ -50,6 +50,15 @@ def save_to_dataframe(product_info, df):
     df = pd.concat([df, new_row], ignore_index=True)
     return df
 
+def retornar_menor_valor(conn):
+    cursor = conn.cursor()
+    cursor.execute(''' 
+            SELECT MIN(price), timestamp FROM prices
+    ''')
+    result = cursor.fetchone()
+    return result[0], result[1]
+
+
 if __name__ == '__main__':
     conn = create_connection()
     setup_database(conn)
@@ -59,6 +68,17 @@ if __name__ == '__main__':
     while True:
         page_content = fetch_page(url = url)
         product = parse_page(page_content.text)
+
+
+        menor_valor, menor_timestamp = retornar_menor_valor(conn)
+        current_price = int(product['price'])
+        if current_price < menor_valor:
+            print('Menor preco detectado')
+            menor_valor = current_price
+            menor_timestamp = product['timestamp']
+        else:
+            print('menor preco é o antigo')
+
         save_to_database(conn, product)
         print('dados salvos')
         time.sleep(10)
