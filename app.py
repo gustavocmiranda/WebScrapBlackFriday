@@ -1,8 +1,17 @@
+import os
+import asyncio
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
 import time
 import pandas as pd
+from dotenv import load_dotenv
+from telegram import Bot
+
+load_dotenv()
+TOKEN = os.getenv('TELEGRAM_TOKEN')
+CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
+bot = Bot(token=TOKEN)
 
 def create_connection(db_name = 'data/echo_pop.db'):
     conn = sqlite3.connect(db_name)
@@ -58,8 +67,11 @@ def retornar_menor_valor(conn):
     result = cursor.fetchone()
     return result[0], result[1]
 
+async def send_telegram_message(text):
+    await bot.send_message(chat_id=CHAT_ID, text=text)
 
-if __name__ == '__main__':
+
+async def main():
     conn = create_connection()
     setup_database(conn)
 
@@ -73,12 +85,14 @@ if __name__ == '__main__':
         menor_valor, menor_timestamp = retornar_menor_valor(conn)
         current_price = int(product['price'])
         if current_price < menor_valor:
-            print('Menor preco detectado')
             menor_valor = current_price
             menor_timestamp = product['timestamp']
+            await send_telegram_message(f'Menor valor encontrado! {menor_valor} às {menor_timestamp}')
         else:
-            print('menor preco é o antigo')
+            await send_telegram_message('nada novo')
 
         save_to_database(conn, product)
         print('dados salvos')
-        time.sleep(10)
+        await asyncio.sleep(1000)
+
+asyncio.run(main())
